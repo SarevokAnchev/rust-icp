@@ -1,0 +1,8 @@
+[package]
+name = "rust-icp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rust-kdtree = {path = "../rust-kdtree"}
+nalgebra = "0.30.1"
