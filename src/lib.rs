@@ -1,9 +1,42 @@
 extern crate rust_kdtree;
 extern crate nalgebra as na;
 
-mod icp {
+pub mod icp {
+    use std::fmt;
     use rust_kdtree::kdtree::*;
     use na::{Vector3, Matrix3xX, Matrix4};
+
+    pub struct Matrix {
+        rows: usize,
+        cols: usize,
+        values: Vec<f64>
+    }
+
+    impl Matrix {
+        pub fn new(rows: usize, cols: usize) -> Matrix {
+            Matrix {
+                rows: rows,
+                cols: cols,
+                values: vec![0.; rows*cols]
+            }
+        }
+
+        pub fn rows(&self) -> usize {
+            self.rows
+        }
+
+        pub fn cols(&self) -> usize {
+            self.cols
+        }
+
+        pub fn get(&self, r: usize, c: usize) -> f64 {
+            self.values[self.rows*c + r]
+        }
+
+        pub fn get_mut(&mut self, r: usize, c: usize) -> &mut f64 {
+            &mut self.values[self.rows*c + r]
+        }
+    }
 
     fn best_transform(fixed: &Matrix3xX<f64>, moving: &Matrix3xX<f64>) -> Matrix4<f64> {
         let mut res: Matrix4<f64> = Matrix4::identity();
@@ -32,12 +65,20 @@ mod icp {
         res
     }
 
-    pub fn icp(fixed: &Matrix3xX<f64>, moving: &Matrix3xX<f64>, max_iterations: usize, tolerance: f64) -> Matrix4<f64> {
+    pub fn icp(fixed: &Matrix, moving: &Matrix, max_iterations: usize, tolerance: f64) -> Result<Matrix, ICPError> {
         let mut tree: KDTree<usize> = KDTree::new(3);
-        for (i, v) in fixed.column_iter().enumerate() {
-            tree.add_node(&[*v.index(0), *v.index(1), *v.index(2)], i);
+        Ok(Matrix::new(4, 4))
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct ICPError {
+        pub msg: String,
+    }
+
+    impl fmt::Display for ICPError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.msg)
         }
-        Matrix4::identity()
     }
 
     #[cfg(test)]
