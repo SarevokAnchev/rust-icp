@@ -2,7 +2,6 @@ extern crate rust_kdtree;
 extern crate nalgebra as na;
 
 mod icp {
-    use nalgebra::Matrix1x2;
     use rust_kdtree::kdtree::*;
     use na::{Vector3, Matrix3xX, Matrix4};
 
@@ -12,7 +11,13 @@ mod icp {
         let cf: Vector3<f64> = fixed.column_mean();
         let cm: Vector3<f64> = moving.column_mean();
 
-        // TODO : retrancher centroides à A et B
+        let mut moving_c: Matrix3xX<f64> = moving.clone_owned();
+        let mut fixed_c: Matrix3xX<f64> = fixed.clone_owned();
+
+        for i in 0..fixed.ncols() {
+            fixed_c.column_mut(i).copy_from(&(fixed.column(i) - cf));
+            moving_c.column_mut(i).copy_from(&(moving.column(i) - cm));
+        }
 
         let h = moving * fixed.transpose();
 
@@ -22,7 +27,8 @@ mod icp {
 
         let t: Vector3<f64> = cf - r*cm;
 
-        // TODO : remplir matrice résultat
+        res.index_mut((..3, ..3)).copy_from(&r);
+        res.index_mut((..3, 3)).copy_from(&t);
         res
     }
 
