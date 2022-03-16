@@ -36,6 +36,22 @@ pub mod icp {
         pub fn get_mut(&mut self, r: usize, c: usize) -> &mut f64 {
             &mut self.values[self.rows*c + r]
         }
+
+        pub fn get_column(&self, c: usize) -> Vec<f64> {
+            let mut ret_vec: Vec<f64> = Vec::new();
+            for i in self.rows*c..self.rows*c + self.rows {
+                ret_vec.push(self.values[i]);
+            }
+            ret_vec
+        }
+
+        pub fn get_row(&self, r: usize) -> Vec<f64> {
+            let mut ret_vec: Vec<f64> = Vec::new();
+            for i in 0..self.cols {
+                ret_vec.push(self.values[i*self.rows + r]);
+            }
+            ret_vec
+        }
     }
 
     fn best_transform(fixed: &Matrix3xX<f64>, moving: &Matrix3xX<f64>) -> Matrix4<f64> {
