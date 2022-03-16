@@ -4,7 +4,7 @@ extern crate nalgebra as na;
 pub mod icp {
     use std::fmt;
     use rust_kdtree::kdtree::*;
-    use na::{Vector3, Matrix3xX, Matrix4};
+    use na::{Vector3, Matrix3xX, Matrix4, Matrix4xX};
 
     pub struct Matrix {
         rows: usize,
@@ -81,9 +81,39 @@ pub mod icp {
         res
     }
 
-    pub fn icp(fixed: &Matrix, moving: &Matrix, max_iterations: usize, tolerance: f64) -> Result<Matrix, ICPError> {
+    pub fn icp(fixed: Matrix, moving: Matrix, max_iterations: usize, tolerance: f64) -> Result<Matrix, ICPError> {
         let mut tree: KDTree<usize> = KDTree::new(3);
-        Ok(Matrix::new(4, 4))
+        for i in 0..fixed.cols {
+            let c = fixed.get_column(i);
+            tree.add_node(&c, i);
+        }
+        let mut tfm: Matrix = Matrix::new(4, 4);
+        for i in 0..4 {
+            *tfm.get_mut(i, i) = 1.;
+        }
+
+        let mut fixed_mat: Matrix4xX<f64> = Matrix4xX::from_element(moving.cols, 1.);
+        let mut moving_mat: Matrix4xX<f64> = Matrix4xX::from_element(moving.cols, 1.);
+        for i in 0..moving.cols {
+            let c = moving.get_column(i);
+            moving_mat.index_mut((..3, i)).copy_from_slice(&c);
+        }
+
+        for it in 0..max_iterations {
+            // correspondance
+            // construction des matrices de points
+            for (i, c) in moving_mat.column_iter().enumerate() {
+                
+            }
+            
+
+
+            // best_transform
+
+            // transformation
+        }
+
+        Ok(tfm)
     }
 
     #[derive(Clone, Debug)]
