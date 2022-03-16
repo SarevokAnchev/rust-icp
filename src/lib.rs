@@ -87,11 +87,6 @@ pub mod icp {
             let c = fixed.get_column(i);
             tree.add_node(&c, i);
         }
-        let mut tfm: Matrix = Matrix::new(4, 4);
-        for i in 0..4 {
-            *tfm.get_mut(i, i) = 1.;
-        }
-
         let mut fixed_mat: Matrix4xX<f64> = Matrix4xX::from_element(moving.cols, 1.);
         let mut moving_mat: Matrix4xX<f64> = Matrix4xX::from_element(moving.cols, 1.);
         for i in 0..moving.cols {
@@ -100,10 +95,9 @@ pub mod icp {
         }
 
         for it in 0..max_iterations {
-            // correspondance
-            // construction des matrices de points
             for (i, c) in moving_mat.column_iter().enumerate() {
-                
+                let closest = tree.nearest_neighbor(c.as_slice()).unwrap();
+                fixed_mat.index_mut((..3, i)).copy_from_slice(&fixed.get_column(closest));
             }
             
 
@@ -113,6 +107,7 @@ pub mod icp {
             // transformation
         }
 
+        let mut tfm: Matrix = Matrix::new(4, 4);
         Ok(tfm)
     }
 
