@@ -3,9 +3,13 @@ extern crate nalgebra as na;
 
 pub mod icp {
     use std::fmt;
-    use rust_kdtree::kdtree::*;
-    use na::{Vector3, Matrix3xX, Matrix4, Matrix4xX};
 
+    use na::{Vector3, Matrix3xX, Matrix4, Matrix4xX};
+    use serde::{Serialize, Deserialize};
+
+    use rust_kdtree::kdtree::*;
+
+    #[derive(Serialize, Deserialize)]
     pub struct Matrix {
         rows: usize,
         cols: usize,
@@ -15,8 +19,8 @@ pub mod icp {
     impl Matrix {
         pub fn new(rows: usize, cols: usize) -> Matrix {
             Matrix {
-                rows: rows,
-                cols: cols,
+                rows,
+                cols,
                 values: vec![0.; rows*cols]
             }
         }
@@ -94,20 +98,30 @@ pub mod icp {
             moving_mat.index_mut((..3, i)).copy_from_slice(&c);
         }
 
+        let mut f: Matrix3xX<f64> = Matrix3xX::zeros(moving.cols);
+        let mut m: Matrix3xX<f64> = Matrix3xX::zeros(moving.cols);
+        let mut cur_tfm: Matrix4<f64> = Matrix4::identity();
+
         for it in 0..max_iterations {
             for (i, c) in moving_mat.column_iter().enumerate() {
-                let closest = tree.nearest_neighbor(c.as_slice()).unwrap();
+                let closest = tree.nearest_neighbor(c.index((..3, 0)).as_slice()).unwrap();
                 fixed_mat.index_mut((..3, i)).copy_from_slice(&fixed.get_column(closest));
             }
-            
 
-
-            // best_transform
-
-            // transformation
+            f.copy_from(&fixed_mat.index((..3, ..)));
+            m.copy_from(&moving_mat.index((..3, ..)));
+            let best = best_transform(&f, &m);
+            cur_tfm = best * cur_tfm;
+            moving_mat = best * moving_mat;
         }
 
         let mut tfm: Matrix = Matrix::new(4, 4);
+        for i in 0..3 {
+            for j in 0..3 {
+                *tfm.get_mut(i, j) = cur_tfm[(i, j)];
+            }
+            *tfm.get_mut(i, 3) = cur_tfm[(i, 3)];
+        }
         Ok(tfm)
     }
 
@@ -124,12 +138,29 @@ pub mod icp {
 
     #[cfg(test)]
     mod tests {
+        use super::{icp, Matrix};
+
+        use std::fs::File;
+        use std::io::prelude::*;
+
+        fn load_data() -> (Matrix, Matrix) {
+            let mut fixed_file = File::open("data/test_fixed.json").unwrap();
+            let mut fixed_str = String::new();
+            fixed_file.read_to_string(&mut fixed_str).unwrap();
+            let fixed: Matrix = serde_json::from_str(&fixed_str).unwrap();
+
+            let mut moving_file = File::open("data/test_moving.json").unwrap();
+            let mut moving_str = String::new();
+            moving_file.read_to_string(&mut moving_str).unwrap();
+            let moving: Matrix = serde_json::from_str(&moving_str).unwrap();
+
+            (fixed, moving)
+        }
+
         #[test]
-        fn it_works() {
-            let result = 2 + 2;
-            assert_eq!(result, 4);
+        fn test_icp() {
+            let (fixed, moving) = load_data();
+            let tfm = icp(fixed, moving, 20, 0.0005);
         }
     }
 }
-
-
