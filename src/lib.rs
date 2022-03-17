@@ -136,12 +136,21 @@ pub mod icp {
         let mut m: Matrix3xX<f64> = Matrix3xX::zeros(moving.cols);
         let mut cur_tfm: Matrix4<f64> = Matrix4::identity();
 
+        let mut error: f64 = 0.;
+
         for it in 0..max_iterations {
+            let mut new_error: f64 = 0.;
             for (i, c) in moving_mat.column_iter().enumerate() {
                 let closest = tree.nearest_neighbor(c.index((..3, 0)).as_slice()).unwrap();
                 fixed_mat.index_mut((..3, i)).copy_from_slice(&fixed.get_column(closest));
+                new_error += tree.get_dist(closest, c.index((..3, 0)).as_slice()).unwrap();
             }
-            println!("{} - ", it);
+            new_error /= moving_mat.ncols() as f64;
+            println!("{} - {}", it, new_error);
+            if it != 0 && (error - new_error).abs() < tolerance{
+                break;
+            }
+            error = new_error;
 
             f.copy_from(&fixed_mat.index((..3, ..)));
             m.copy_from(&moving_mat.index((..3, ..)));
@@ -208,7 +217,7 @@ pub mod icp {
         #[test]
         fn test_icp() {
             let (fixed, moving) = load_data();
-            let tfm = icp(fixed, moving, 20, 0.0005);
+            let _tfm = icp(fixed, moving, 50, 0.0005);
         }
     }
 }
