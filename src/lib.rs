@@ -157,6 +157,7 @@ pub mod icp {
             }
             *tfm.get_mut(i, 3) = cur_tfm[(i, 3)];
         }
+        *tfm.get_mut(3, 3) = 1.;
         println!("End of optimization. Transform matrix:\n{}", tfm);
         Ok(tfm)
     }
