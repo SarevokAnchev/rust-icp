@@ -71,6 +71,27 @@ pub mod icp {
         }
     }
 
+    impl fmt::Display for Matrix {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let mut disp_string: String = format!("Matrix of size ({}, {})\n", self.rows, self.cols);
+            if self.rows * self.cols > 100 {
+                disp_string.push_str("[ ... ]\n");
+            }
+            else {
+                disp_string.push_str("[\n");
+                for r in 0..self.rows {
+                    disp_string.push_str("\t");
+                    for c in 0..self.cols {
+                        disp_string.push_str(&format!("{},\t", self.get(r, c)));
+                    }
+                    disp_string.push_str("\n")
+                }
+                disp_string.push_str("]");
+            }
+            write!(f, "{}", disp_string)
+        }
+    }
+
     fn best_transform(fixed: &Matrix3xX<f64>, moving: &Matrix3xX<f64>) -> Matrix4<f64> {
         let mut res: Matrix4<f64> = Matrix4::identity();
 
@@ -136,6 +157,7 @@ pub mod icp {
             }
             *tfm.get_mut(i, 3) = cur_tfm[(i, 3)];
         }
+        println!("End of optimization. Transform matrix:\n{}", tfm);
         Ok(tfm)
     }
 
