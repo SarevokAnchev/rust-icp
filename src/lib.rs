@@ -56,6 +56,18 @@ pub mod icp {
             }
             ret_vec
         }
+
+        pub fn set_row(&mut self, r: usize, values: &Vec<f64>) {
+            for i in 0..self.cols {
+                self.values[i*self.rows + r] = values[i];
+            }
+        }
+
+        pub fn set_column(&mut self, c: usize, values: &Vec<f64>) {
+            for i in 0..self.rows {
+                self.values[c*self.rows + i] = values[i];
+            }
+        }
     }
 
     fn best_transform(fixed: &Matrix3xX<f64>, moving: &Matrix3xX<f64>) -> Matrix4<f64> {
