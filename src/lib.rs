@@ -58,13 +58,13 @@ pub mod icp {
             ret_vec
         }
 
-        pub fn set_row(&mut self, r: usize, values: &Vec<f64>) {
+        pub fn set_row(&mut self, r: usize, values: &[f64]) {
             for i in 0..self.cols {
                 self.values[i*self.rows + r] = values[i];
             }
         }
 
-        pub fn set_column(&mut self, c: usize, values: &Vec<f64>) {
+        pub fn set_column(&mut self, c: usize, values: &[f64]) {
             for i in 0..self.rows {
                 self.values[c*self.rows + i] = values[i];
             }
@@ -80,13 +80,13 @@ pub mod icp {
             else {
                 disp_string.push_str("[\n");
                 for r in 0..self.rows {
-                    disp_string.push_str("\t");
+                    disp_string.push('\t');
                     for c in 0..self.cols {
                         disp_string.push_str(&format!("{},\t", self.get(r, c)));
                     }
-                    disp_string.push_str("\n")
+                    disp_string.push('\n')
                 }
-                disp_string.push_str("]");
+                disp_string.push(']');
             }
             write!(f, "{}", disp_string)
         }
