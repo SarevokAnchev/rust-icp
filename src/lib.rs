@@ -106,11 +106,11 @@ pub mod icp {
             moving_c.column_mut(i).copy_from(&(moving.column(i) - cm));
         }
 
-        let h = moving * fixed.transpose();
+        let h = moving_c * fixed_c.transpose();
 
         let h_svd = h.svd(true, true);
 
-        let r = h_svd.v_t.unwrap() * h_svd.u.unwrap().transpose();
+        let r = h_svd.v_t.unwrap().transpose() * h_svd.u.unwrap().transpose();
 
         let t: Vector3<f64> = cf - r*cm;
 
@@ -217,7 +217,7 @@ pub mod icp {
         #[test]
         fn test_icp() {
             let (fixed, moving) = load_data();
-            let _tfm = icp(fixed, moving, 50, 0.0005);
+            let _tfm = icp(fixed, moving, 150, 0.0005);
         }
     }
 }
