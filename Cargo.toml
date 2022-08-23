@@ -3,9 +3,18 @@ name = "rust-icp"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "icp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "icp_reg"
+path = "src/main.rs"
+
 [dependencies]
 rust-kdtree = {path = "../rust-kdtree"}
 nalgebra = "0.30.1"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 rand = "*"
+kiss3d = "0.35.0"
