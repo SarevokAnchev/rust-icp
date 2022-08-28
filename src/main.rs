@@ -31,8 +31,27 @@ fn load_data() -> (Matrix, Matrix) {
 }
 
 fn main() {
-    let (fixed, moving) = load_data();
-    let mut transform = icp(&fixed, &moving, 100, 0.1).unwrap();
-    // TODO : apply transform
-    draw_registration(&fixed, &moving).unwrap();
+    let (mut fixed, mut moving) = load_data();
+    
+    let mut fixed_mean = fixed.mean_col();
+    fixed_mean.minus();
+    fixed.add_col(&fixed_mean).unwrap();
+    let mut moving_mean = moving.mean_col();
+    moving_mean.minus();
+    moving.add_col(&moving_mean).unwrap();
+
+    
+    let transform = icp(&fixed, &moving, 100, 0.00001).unwrap();
+    let mut homogenous_moving = Matrix::new(4, moving.cols());
+    homogenous_moving.set_row(0, &moving.get_row(0));
+    homogenous_moving.set_row(1, &moving.get_row(1));
+    homogenous_moving.set_row(2, &moving.get_row(2));
+    let mut ones: Vec<f64> = Vec::with_capacity(moving.cols());
+    for _ in 0..moving.cols() {
+        ones.push(1.);
+    }
+    homogenous_moving.set_row(3, &ones);
+    homogenous_moving = transform.dot(&homogenous_moving).unwrap();
+    
+    draw_registration(&fixed, &homogenous_moving).unwrap();
 }
