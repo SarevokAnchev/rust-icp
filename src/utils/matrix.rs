@@ -1,6 +1,12 @@
-use std::fmt::{self, Error};
+use std::fmt;
 
 use serde::{Serialize, Deserialize};
+
+pub trait SimpleVector {
+    fn size(&self) -> usize;
+    fn get(&self, i: usize) -> Result<f64, MatError>;
+    fn get_mut(&mut self, i: usize) -> Result<&mut f64, MatError>;
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Matrix {
@@ -69,10 +75,57 @@ impl Matrix {
         let mut res = Matrix::new(self.rows, other.cols);
         for r in 0..res.rows {
             for c in 0..res.cols {
-                // TODO : matrix product
+                *res.get_mut(r, c) = 0.;
+                for k in 0..self.cols {
+                    *res.get_mut(r, c) += self.get(r, k) * other.get(k, c);
+                }
             }
         }
         Ok(res)
+    }
+
+    pub fn mean_col(&self) -> Matrix {
+        let mut ret_mat = Matrix::new(self.rows, 1);
+        for c in 0..self.cols {
+            for r in 0..self.rows {
+                *ret_mat.get_mut(r, 0) += self.get(r, c);
+            }
+        }
+        for r in 0..self.rows {
+            *ret_mat.get_mut(r, 0) /= self.cols as f64;
+        }
+        ret_mat
+    }
+
+    pub fn mean_row(&self) -> Matrix {
+        let mut ret_mat = Matrix::new(1, self.cols);
+        for r in 0..self.rows {
+            for c in 0..self.cols {
+                *ret_mat.get_mut(0, c) += self.get(r, c);
+            }
+        }
+        for c in 0..self.cols {
+            *ret_mat.get_mut(0, c) /= self.rows as f64;
+        }
+        ret_mat
+    }
+
+    pub fn add_col(&mut self, other: &dyn SimpleVector) -> Result<(), MatError> {
+        if other.size() != self.rows {
+            return Err(MatError{msg: String::from("Invalid vector size.")});
+        }
+        for c in 0..self.cols {
+            for r in 0..self.rows {
+                *self.get_mut(r, c) += other.get(r).unwrap();
+            }
+        }
+        Ok(())
+    }
+
+    pub fn minus(&mut self) {
+        for v in self.values.iter_mut() {
+            *v = -*v;
+        }
     }
 }
 
@@ -94,6 +147,46 @@ impl fmt::Display for Matrix {
             disp_string.push(']');
         }
         write!(f, "{}", disp_string)
+    }
+}
+
+impl SimpleVector for Matrix {
+    fn size(&self) -> usize {
+        self.rows
+    }
+
+    fn get(&self, i: usize) -> Result<f64, MatError> {
+        if self.rows <= i {
+            return Err(MatError{msg: String::from("Index error.")});
+        }
+        Ok(self.get(i, 0))
+    }
+
+    fn get_mut(&mut self, i: usize) -> Result<&mut f64, MatError> {
+        if self.rows <= i {
+            return Err(MatError{msg: String::from("Index error.")});
+        }
+        Ok(self.get_mut(i, 0))
+    }
+}
+
+impl SimpleVector for Vec<f64> {
+    fn size(&self) -> usize {
+        self.len()
+    }
+
+    fn get(&self, i: usize) -> Result<f64, MatError> {
+        if self.len() <= i {
+            return Err(MatError{msg: String::from("Index error.")});
+        }
+        Ok(self[i])
+    }
+
+    fn get_mut(&mut self, i: usize) -> Result<&mut f64, MatError> {
+        if self.len() <= i {
+            return Err(MatError{msg: String::from("Index error.")});
+        }
+        Ok(&mut self[i])
     }
 }
 
